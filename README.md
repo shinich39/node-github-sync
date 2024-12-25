@@ -1,6 +1,6 @@
 # node-github-sync
 
-Synchronize files with github repo.
+Synchronize local files with github repo files.
 
 ## Usage
 

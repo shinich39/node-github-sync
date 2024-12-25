@@ -1,7 +1,7 @@
 {
   "name": "node-github-sync",
   "version": "1.0.0",
-  "description": "Synchronize files with github repo.",
+  "description": "Synchronize local files with github repo files.",
   "bin": {
     "githubsync": "./bin/index.js"
   },
