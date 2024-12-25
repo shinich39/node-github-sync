@@ -7672,11 +7672,11 @@ async function downloadFile(octokit, owner, repo, filePath) {
   if (res.status !== 200) {
     throw new Error(`Could not connect to repository: ${owner}/${repo}`);
   }
-  let buffer, url;
+  let buffer;
   if (res.data.encoding == "base64") {
     buffer = Buffer.from(res.data.content, res.data.encoding);
   } else if (res.data.encoding == "none" && res.data.download_url) {
-    const response = await fetch(url, { method: "GET" });
+    const response = await fetch(res.data.download_url, { method: "GET" });
     buffer = Buffer.from(await response.arrayBuffer());
   }
   if (!buffer) {
