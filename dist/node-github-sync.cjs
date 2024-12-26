@@ -7600,19 +7600,20 @@ function readConfig() {
 function updateConfig(config) {
   import_node_fs.default.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf8");
 }
-function parseRemotePath(str) {
-  const parts = str.split("/");
-  const owner = parts[0];
-  const repo = parts[1];
-  const remotePath = parts.slice(2).join("/");
+function parseStringURL(str) {
   return {
     sha: "",
-    owner,
-    repo,
-    remotePath,
+    resolved: str,
     createdAt: (/* @__PURE__ */ new Date()).valueOf(),
     updatedAt: (/* @__PURE__ */ new Date()).valueOf()
   };
+}
+function parseRemoteURL(str) {
+  const parts = str.split("/");
+  const owner = parts[0];
+  const repo = parts[1];
+  const file = parts.slice(2).join("/");
+  return [owner, repo, file];
 }
 function saveFile(filePath, content, encoding = "binary") {
   const dirPath = import_node_path.default.dirname(filePath);
@@ -7698,10 +7699,10 @@ async function sync(tokens) {
   for (const localPath of Object.keys(c)) {
     const isExists = import_node_fs.default.existsSync(localPath);
     if (typeof c[localPath] == "string") {
-      c[localPath] = parseRemotePath(c[localPath]);
+      c[localPath] = parseStringURL(c[localPath]);
     }
     const r = c[localPath];
-    const { owner, repo, remotePath } = r;
+    const [owner, repo, remotePath] = parseRemoteURL(r.resolved);
     const localHash = r.sha;
     const token = tokens?.[owner]?.[repo] || tokens?.[`${owner}/${repo}`];
     const octokit = createOctokit(token);
@@ -7713,11 +7714,11 @@ async function sync(tokens) {
       remoteHashes[`${owner}/${repo}`] = remoteHash;
     }
     const isUpdated = localHash != remoteHash;
-    r.sha = remoteHash;
     if (!isExists || isUpdated) {
       try {
         const { buffer } = await downloadFile(octokit, owner, repo, remotePath);
         saveFile(localPath, buffer);
+        r.sha = remoteHash;
         r.updatedAt = (/* @__PURE__ */ new Date()).valueOf();
       } catch (err) {
         console.error(err);

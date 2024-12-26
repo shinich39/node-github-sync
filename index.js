@@ -18,19 +18,21 @@ function updateConfig(config) {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf8");
 }
 
-function parseRemotePath(str) {
-  const parts = str.split("/");
-  const owner = parts[0];
-  const repo = parts[1];
-  const remotePath = parts.slice(2).join("/");
+function parseStringURL(str) {
   return {
     sha: "",
-    owner: owner,
-    repo: repo,
-    remotePath: remotePath,
+    resolved: str,
     createdAt: new Date().valueOf(),
     updatedAt: new Date().valueOf(),
   };
+}
+
+function parseRemoteURL(str) {
+  const parts = str.split("/");
+  const owner = parts[0];
+  const repo = parts[1];
+  const file = parts.slice(2).join("/");
+  return [owner, repo, file];
 }
 
 function saveFile(filePath, content, encoding = "binary") {
@@ -159,12 +161,12 @@ async function sync(tokens) {
 
     // Convert to object
     if (typeof c[localPath] == "string") {
-      c[localPath] = parseRemotePath(c[localPath]);
+      c[localPath] = parseStringURL(c[localPath]);
     }
 
     const r = c[localPath];
 
-    const { owner, repo, remotePath } = r;
+    const [owner, repo, remotePath] = parseRemoteURL(r.resolved);
     const localHash = r.sha;
     const token = tokens?.[owner]?.[repo] || tokens?.[`${owner}/${repo}`];
 
@@ -179,12 +181,11 @@ async function sync(tokens) {
 
     const isUpdated = localHash != remoteHash;
 
-    r.sha = remoteHash;
-
     if (!isExists || isUpdated) {
       try {
         const { buffer } = await downloadFile(octokit, owner, repo, remotePath);
         saveFile(localPath, buffer);
+        r.sha = remoteHash;
         r.updatedAt = new Date().valueOf();
       } catch (err) {
         console.error(err);

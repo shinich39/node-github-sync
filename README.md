@@ -9,7 +9,9 @@ Synchronize local files with github repo files.
 ```js
 // PROJECT_ROOT_DIR/ngs.config.json
 {
+  // localPath: OWNER/REPOSOTORY/FILE_PATH
   "output/node-py.mjs": "shinich39/node-github-sync/dist/node-github-sync.min.mjs"
+  // ...
 }
 ```
 
